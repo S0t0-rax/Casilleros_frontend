@@ -1,0 +1,278 @@
+<div class="mobile-layout">
+  
+  <!-- Header Superior -->
+  <header class="header-bar">
+    <div class="brand-title">
+      <span>📦</span> BoxKeeper <span class="admin-badge">ADMIN</span>
+    </div>
+    <button class="logout-icon-btn" (click)="logout()">Cerrar Sesión</button>
+  </header>
+
+  <!-- Pestañas de Navegación del Admin -->
+  <nav class="admin-tabs">
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab() === 'messages'" 
+      (click)="activeTab.set('messages')">
+      💬 Soporte ({{ messages().length }})
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab() === 'lockers'" 
+      (click)="activeTab.set('lockers')">
+      🔑 Casilleros ({{ lockers().length }})
+    </button>
+  </nav>
+
+  <!-- Contenido Principal -->
+  <main class="main-content">
+
+    <!-- PESTAÑA: SOPORTE (VERIFICAR MENSAJES) -->
+    @if (activeTab() === 'messages') {
+      <div class="animate-fade-in">
+        <h2 class="section-title" style="font-size: 1.2rem; color: var(--text-secondary); margin-bottom: 12px;">
+          Buzón de Mensajes de Soporte
+        </h2>
+
+        @if (messages().length > 0) {
+          <div class="message-list">
+            @for (msg of messages(); track msg.id) {
+              <div 
+                class="msg-card glass-panel" 
+                [class.pending]="msg.status === 'PENDIENTE'"
+                [class.verified]="msg.status === 'VERIFICADO'"
+                (click)="openVerifyModal(msg)">
+                
+                <div class="msg-header">
+                  <span class="msg-subject">{{ msg.subject }}</span>
+                  <span class="badge" [ngClass]="{
+                    'badge-warning': msg.status === 'PENDIENTE',
+                    'badge-success': msg.status === 'VERIFICADO'
+                  }">
+                    {{ msg.status }}
+                  </span>
+                </div>
+                
+                <div class="msg-user-email">De: {{ msg.user_email }}</div>
+                <p class="msg-body">{{ msg.content }}</p>
+                
+                @if (msg.response) {
+                  <div class="msg-reply">
+                    <strong style="color: var(--text-muted); font-size: 0.8rem; display: block;">Respuesta enviada:</strong>
+                    {{ msg.response }}
+                  </div>
+                } @else {
+                  <div style="color: var(--accent-indigo); font-size: 0.85rem; font-weight: 600; margin-top: 4px;">
+                    👉 Toca para verificar y responder
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        } @else {
+          <p style="color: var(--text-secondary); font-size: 0.95rem;">No hay reportes ni mensajes de soporte en el sistema.</p>
+        }
+      </div>
+    }
+
+    <!-- PESTAÑA: GESTIÓN DE CASILLEROS -->
+    @if (activeTab() === 'lockers') {
+      <div class="animate-fade-in">
+        
+        <!-- Formulario para crear casillero -->
+        <div class="glass-panel" style="padding: 20px; margin-bottom: 24px;">
+          <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 16px;">➕ Registrar Nuevo Casillero</h3>
+          
+          @if (lockerSuccess()) {
+            <div class="alert alert-success animate-fade-in">{{ lockerSuccess() }}</div>
+          }
+          @if (lockerError()) {
+            <div class="alert alert-danger animate-fade-in">{{ lockerError() }}</div>
+          }
+
+          <form (ngSubmit)="onCreateLocker()">
+            <div class="form-group">
+              <label class="form-label" for="lockerNum">Código / Número del Casillero</label>
+              <input 
+                type="text" 
+                id="lockerNum" 
+                name="lockerNum" 
+                class="form-control" 
+                placeholder="Ej. C-404" 
+                [(ngModel)]="newLockerNumber" 
+                required>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="lockerSize">Tamaño</label>
+              <select 
+                id="lockerSize" 
+                name="lockerSize" 
+                class="form-control" 
+                [(ngModel)]="newLockerSize" 
+                required>
+                <option value="PEQUEÑO">PEQUEÑO</option>
+                <option value="MEDIANO">MEDIANO</option>
+                <option value="GRANDE">GRANDE</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="lockerPrice">Precio por Hora ($)</label>
+              <input 
+                type="number" 
+                id="lockerPrice" 
+                name="lockerPrice" 
+                class="form-control" 
+                step="0.01" 
+                [(ngModel)]="newLockerPrice" 
+                required>
+            </div>
+            
+            <button type="submit" class="btn-primary" style="width: 100%;">
+              💾 Guardar Casillero
+            </button>
+          </form>
+        </div>
+
+        <!-- Solicitudes Pendientes -->
+        @if (getPendingLockers().length > 0) {
+          <div style="margin-bottom: 24px;">
+            <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 12px; color: #ffc107;">
+              ⏳ Solicitudes Pendientes de Verificación
+            </h3>
+            <div class="admin-lockers-grid">
+              @for (locker of getPendingLockers(); track locker.id) {
+                <div class="admin-locker-card glass-panel" style="border: 1px solid rgba(255, 193, 7, 0.4);">
+                  <div class="locker-header">
+                    <span class="locker-num">{{ locker.locker_number }}</span>
+                    <span class="locker-size">{{ locker.size }}</span>
+                  </div>
+                  <div style="margin-top: 8px; font-size: 0.85rem;">
+                    <div>Asignado a: {{ locker.assigned_user_id || 'Anónimo' }}</div>
+                    <div>Tiempo solicitado: {{ locker.pending_rent_hours }} hora(s)</div>
+                    @if (locker.payment_receipt_url) {
+                      <div style="margin-top: 6px;">
+                        📄 <a [href]="auth.apiUrl.split('/api/v1')[0] + locker.payment_receipt_url" target="_blank" style="color: var(--accent-cyan); text-decoration: underline; font-weight: 600;">Ver Comprobante</a>
+                      </div>
+                    }
+                  </div>
+                  <div style="display: flex; gap: 8px; margin-top: 12px;">
+                    <button class="btn-primary" style="flex: 1; padding: 6px;" (click)="approveLocker(locker.id)">Aprobar</button>
+                    <button class="btn-danger" style="flex: 1; padding: 6px;" (click)="rejectLocker(locker.id)">Rechazar</button>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Lista de todos los casilleros en el sistema -->
+        <div>
+          <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 12px;">📋 Inventario de Casilleros</h3>
+          @if (lockers().length > 0) {
+            <div class="admin-lockers-grid">
+              @for (locker of lockers(); track locker.id) {
+                <div class="admin-locker-card glass-panel">
+                  <div class="locker-header">
+                    <span class="locker-num">{{ locker.locker_number }}</span>
+                    <span class="locker-size">{{ locker.size }}</span>
+                  </div>
+                  
+                  <div>
+                    <span class="badge" [ngClass]="{
+                      'badge-success': locker.status === 'DISPONIBLE',
+                      'badge-danger': locker.status === 'OCUPADO',
+                      'badge-warning': locker.status === 'MANTENIMIENTO'
+                    }">
+                      {{ locker.status }}
+                    </span>
+                  </div>
+
+                  <div class="locker-user" style="font-size: 0.85rem; margin-top: 4px;">
+                    Tarifa: <strong>${{ locker.price_per_hour }}/h</strong>
+                    @if (locker.status === 'OCUPADO') {
+                      <div style="margin-top: 4px; color: var(--text-secondary);">
+                        Asignado a ID: {{ locker.assigned_user_id || 'Anónimo (Invitado)' }} <br>
+                        PIN Físico: <strong style="color: var(--accent-cyan);">{{ locker.pin_code || '0000' }}</strong> <br>
+                        Vence: {{ locker.occupied_until | date:'dd/MM/yyyy HH:mm' }}
+                        @if (locker.payment_receipt_url) {
+                          <div style="margin-top: 6px;">
+                            📄 <a [href]="auth.apiUrl.split('/api/v1')[0] + locker.payment_receipt_url" target="_blank" style="color: var(--accent-cyan); text-decoration: underline; font-weight: 600;">Ver Comprobante</a>
+                          </div>
+                        }
+                      </div>
+                    }
+
+                    <!-- Estado de cerrojo físico y controles admin -->
+                    <div style="margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;">
+                      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                        <span>Cerrojo:</span>
+                        <span class="badge" [ngClass]="{
+                          'badge-danger': locker.is_locked,
+                          'badge-success': !locker.is_locked
+                        }">
+                          {{ locker.is_locked ? '🔒 CERRADO' : '🔓 ABIERTO' }}
+                        </span>
+                      </div>
+                      
+                      <div style="display: flex; gap: 6px; margin-top: 4px;">
+                        @if (locker.is_locked) {
+                          <button class="btn-primary" style="padding: 4px 8px; font-size: 0.75rem; flex: 1; border-radius: 4px;" (click)="unlockLockerAdmin(locker.id)">
+                            🔓 Abrir
+                          </button>
+                        } @else {
+                          <button class="btn-danger" style="padding: 4px 8px; font-size: 0.75rem; flex: 1; border-radius: 4px;" (click)="lockLockerAdmin(locker.id)">
+                            🔒 Cerrar
+                          </button>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">No hay casilleros registrados en el sistema.</p>
+          }
+        </div>
+
+      </div>
+    }
+
+  </main>
+
+  <!-- MODAL: VERIFICAR Y RESPONDER MENSAJE (Bottom Sheet) -->
+  @if (selectedMessage()) {
+    <div class="modal-overlay" (click)="closeVerifyModal()">
+      <div class="modal-sheet" (click)="$event.stopPropagation()">
+        <h3 class="modal-title">📝 Responder y Verificar Mensaje</h3>
+        
+        <div class="modal-desc">
+          <strong style="color: var(--accent-cyan);">Asunto:</strong> {{ selectedMessage()?.subject }} <br>
+          <strong style="color: var(--accent-cyan);">Usuario:</strong> {{ selectedMessage()?.user_email }} <br><br>
+          <strong>Contenido:</strong> <br>
+          {{ selectedMessage()?.content }}
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="replyText">Respuesta del Administrador</label>
+          <textarea 
+            id="replyText" 
+            class="form-control" 
+            rows="4" 
+            placeholder="Escribe la respuesta o nota de verificación aquí..." 
+            [(ngModel)]="adminResponseText"></textarea>
+        </div>
+
+        <div class="modal-footer-btns">
+          <button class="btn-secondary" (click)="closeVerifyModal()">Cerrar</button>
+          <button class="btn-primary" (click)="verifySelectedMessage()">
+            ✔️ Marcar como Verificado
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+</div>

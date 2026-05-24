@@ -1,0 +1,117 @@
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  background-color: var(--bg-primary);
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.15) 0%, transparent 40%);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 40px 30px;
+  text-align: center;
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.auth-header {
+  margin-bottom: 30px;
+}
+
+.auth-logo {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  background: var(--gradient-primary);
+  border-radius: var(--border-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-glow);
+  font-size: 2rem;
+  color: white;
+  animation: float 3s ease-in-out infinite;
+}
+
+.auth-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.auth-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.alert {
+  padding: 12px 16px;
+  border-radius: var(--border-radius-sm);
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: left;
+}
+
+.alert-danger {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.alert-success {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.auth-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 14px;
+}
+
+.auth-toggle {
+  margin-top: 24px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.auth-toggle-link {
+  color: var(--accent-indigo);
+  font-weight: 600;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-size: inherit;
+  padding: 0;
+  margin-left: 5px;
+  text-decoration: underline;
+  transition: var(--transition-fast);
+}
+
+.auth-toggle-link:hover {
+  color: var(--accent-violet);
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* Adaptación responsive para celulares extra pequeños */
+@media (max-width: 375px) {
+  .auth-card {
+    padding: 30px 20px;
+  }
+  .auth-title {
+    font-size: 1.5rem;
+  }
+}

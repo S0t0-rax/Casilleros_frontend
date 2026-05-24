@@ -1,0 +1,351 @@
+/* Contenedor principal móvil */
+.mobile-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding-bottom: 75px; /* Espacio para el bottom nav */
+}
+
+/* Header superior */
+.header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-glass);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.brand-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logout-icon-btn {
+  background: transparent;
+  border: 1px solid var(--border-glass);
+  color: var(--text-secondary);
+  padding: 8px 12px;
+  border-radius: var(--border-radius-sm);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.logout-icon-btn:hover {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* Contenido Principal */
+.main-content {
+  flex: 1;
+  padding: 20px;
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Secciones */
+.section-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Sección de Mis Casilleros RENTADOS */
+.my-lockers-section {
+  margin-bottom: 28px;
+}
+
+.lockers-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 375px) {
+  .lockers-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Card del Casillero */
+.locker-card {
+  padding: 16px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: var(--transition-fast);
+  cursor: pointer;
+}
+
+.locker-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--text-muted);
+}
+
+.locker-card.my-owned {
+  border-color: var(--accent-indigo);
+  background: var(--gradient-glow);
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.15);
+}
+
+.locker-card.my-owned::after {
+  content: 'MÍO';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--accent-indigo);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+
+.locker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.locker-num {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.locker-size {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  border: 1px solid var(--border-glass);
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.locker-info-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.locker-price {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+}
+
+.locker-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.btn-card {
+  padding: 10px;
+  font-size: 0.85rem;
+  width: 100%;
+}
+
+/* Panel de Mensajes */
+.messages-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.message-card {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.message-subject {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.message-body {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.message-response {
+  margin-top: 10px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 3px solid var(--accent-indigo);
+  border-radius: 4px;
+}
+
+.response-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.response-text {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+/* Bottom Navigation (Barra inferior táctil) */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 65px;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-glass);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 10;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  width: 25%;
+  height: 100%;
+  justify-content: center;
+  gap: 4px;
+  transition: var(--transition-fast);
+}
+
+.nav-item.active {
+  color: var(--accent-indigo);
+}
+
+.nav-icon {
+  font-size: 1.3rem;
+}
+
+/* Modales / Bottom-Sheets */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: flex-end; /* Efecto bottom-sheet */
+  justify-content: center;
+  z-index: 100;
+  animation: fadeInOverlay 0.2s ease-out;
+}
+
+.modal-sheet {
+  width: 100%;
+  max-width: 500px;
+  background: var(--bg-secondary);
+  border-top-left-radius: var(--border-radius-lg);
+  border-top-right-radius: var(--border-radius-lg);
+  padding: 30px 24px 40px;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border-top: 1px solid var(--border-glass);
+}
+
+.modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.modal-desc {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+
+.modal-footer-btns {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.modal-footer-btns button {
+  flex: 1;
+}
+
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* Panel Perfil */
+.profile-card {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.profile-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-bottom: 1px solid var(--border-glass);
+  padding-bottom: 12px;
+}
+
+.profile-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.profile-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.profile-val {
+  font-weight: 600;
+  font-size: 1.1rem;
+}

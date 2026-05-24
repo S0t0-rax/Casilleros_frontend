@@ -1,0 +1,485 @@
+<div class="mobile-layout">
+  
+  <!-- Header Superior -->
+  <header class="header-bar">
+    <div class="brand-title">
+      <span>📦</span> BoxKeeper
+    </div>
+    @if (auth.isLoggedIn()) {
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 0.85rem; color: var(--text-secondary); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+          Hola, {{ auth.currentUser()?.full_name?.split(' ')?.at(0) }}
+        </span>
+        <button class="logout-icon-btn" (click)="logout()">Salir</button>
+      </div>
+    } @else {
+      <button class="logout-icon-btn" style="color: var(--accent-indigo); font-weight: 600;" (click)="router.navigate(['/login'])">
+        🔑 Acceder
+      </button>
+    }
+  </header>
+
+  <!-- Contenido Principal -->
+  <main class="main-content">
+    
+    <!-- PESTAÑA: CASILLEROS -->
+    @if (activeTab() === 'lockers') {
+      <div class="animate-fade-in">
+        
+        <!-- Mis Casilleros Rentados -->
+        <div class="my-lockers-section">
+          <h2 class="section-title">🔒 Mis Casilleros</h2>
+          @if (getMyLockers().length > 0) {
+            <div class="lockers-grid">
+              @for (locker of getMyLockers(); track locker.id) {
+                <div class="locker-card glass-panel my-owned">
+                  <div class="locker-header">
+                    <span class="locker-num">{{ locker.locker_number }}</span>
+                    <span class="locker-size">{{ locker.size }}</span>
+                  </div>
+                  
+                  <div class="locker-info-text">
+                    @if (locker.status === 'ESPERANDO_VERIFICACION') {
+                      <div class="alert alert-warning" style="padding: 8px; font-size: 0.9rem; margin-bottom: 8px; border-radius: 6px; background: rgba(255, 193, 7, 0.2); color: #ffc107; border: 1px solid rgba(255, 193, 7, 0.4);">
+                        ⏳ <strong>Esperando Verificación</strong><br>
+                        El administrador está revisando tu pago.
+                      </div>
+                    } @else {
+                      @if (locker.occupied_until) {
+                        <div>Vence: <strong>{{ locker.occupied_until | date:'dd/MM/yyyy HH:mm' }}</strong></div>
+                      } @else {
+                        <div>Vence: <strong style="color: var(--accent-cyan);">Iniciará al cerrar</strong></div>
+                      }
+                      <div class="locker-price">Tarifa: ${{ locker.price_per_hour }}/h</div>
+                      
+                      <div style="margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;">
+                        <div style="font-size: 0.9rem;">🔑 PIN Físico: <strong style="color: var(--accent-cyan); font-size: 1.1rem; letter-spacing: 1px;">{{ locker.pin_code || '0000' }}</strong></div>
+                        <div style="font-size: 0.85rem; margin-top: 4px; display: flex; align-items: center; gap: 6px;">
+                          <span>Cerrojo:</span>
+                          <span class="badge" [ngClass]="{
+                            'badge-danger': locker.is_locked,
+                            'badge-success': !locker.is_locked
+                          }">
+                            {{ locker.is_locked ? '🔒 CERRADO' : '🔓 ABIERTO' }}
+                          </span>
+                        </div>
+                      </div>
+                    }
+                  </div>
+
+                  <div class="locker-actions">
+                    @if (locker.status !== 'ESPERANDO_VERIFICACION') {
+                      @if (!locker.is_locked) {
+                        <button class="btn-primary btn-card" style="background: var(--color-warning); color: var(--bg-primary); font-weight: bold; border: 1px solid var(--color-warning);" (click)="closeLocker(locker)">🔒 Cerrar Puerta</button>
+                      }
+                      <button class="btn-primary btn-card" (click)="openExtendModal(locker)">💳 Pagar / Extender</button>
+                      <button class="btn-danger btn-card" (click)="releaseLocker(locker)">🔓 Entregar (Liberar)</button>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 20px;">
+              No tienes casilleros alquilados en este momento. ¡Elige uno de los disponibles abajo!
+            </p>
+          }
+        </div>
+
+        <!-- Casilleros Disponibles para Alquilar -->
+        <div>
+          <h2 class="section-title">⚡ Disponibles para Alquilar</h2>
+          @if (getAvailableLockers().length > 0) {
+            <div class="lockers-grid">
+              @for (locker of getAvailableLockers(); track locker.id) {
+                <div class="locker-card glass-panel" (click)="openRentModal(locker)">
+                  <div class="locker-header">
+                    <span class="locker-num">{{ locker.locker_number }}</span>
+                    <span class="locker-size">{{ locker.size }}</span>
+                  </div>
+                  
+                  <div class="locker-info-text">
+                    <span class="badge badge-success">DISPONIBLE</span>
+                  </div>
+                  
+                  <div class="locker-price">${{ locker.price_per_hour }}/h</div>
+                  
+                  <div class="locker-actions">
+                    <button class="btn-primary btn-card" style="padding: 8px;">🔑 Reservar</button>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">
+              Lo sentimos, no hay casilleros disponibles en este momento.
+            </p>
+          }
+        </div>
+
+      </div>
+    }
+
+    <!-- PESTAÑA: SOPORTE / MENSAJES -->
+    @if (activeTab() === 'messages') {
+      <div class="animate-fade-in">
+        <h2 class="section-title">💬 Soporte y Ayuda</h2>
+        
+        <!-- Formulario de Mensaje -->
+        <div class="glass-panel" style="padding: 20px; margin-bottom: 24px;">
+          <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 16px;">Enviar un Mensaje al Administrador</h3>
+          
+          @if (msgSuccess()) {
+            <div class="alert alert-success animate-fade-in">{{ msgSuccess() }}</div>
+          }
+          @if (msgError()) {
+            <div class="alert alert-danger animate-fade-in">{{ msgError() }}</div>
+          }
+
+          <form (ngSubmit)="onSubmitMessage()">
+            <div class="form-group">
+              <label class="form-label" for="subject">Asunto</label>
+              <input 
+                type="text" 
+                id="subject" 
+                name="subject" 
+                class="form-control" 
+                placeholder="Ej. Problema al abrir el casillero" 
+                [(ngModel)]="msgSubject" 
+                required>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="content">Detalle del Mensaje</label>
+              <textarea 
+                id="content" 
+                name="content" 
+                class="form-control" 
+                rows="4" 
+                placeholder="Escribe aquí tu duda, consulta o reporte..." 
+                [(ngModel)]="msgContent" 
+                required></textarea>
+            </div>
+            
+            <button type="submit" class="btn-primary" style="width: 100%;">
+              ✉ Enviar Mensaje
+            </button>
+          </form>
+        </div>
+
+        <!-- Historial de Mensajes -->
+        <div>
+          <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 12px;">Historial de Reportes</h3>
+          @if (myMessages().length > 0) {
+            <div class="messages-container">
+              @for (msg of myMessages(); track msg.id) {
+                <div class="message-card glass-panel">
+                  <div class="message-header">
+                    <span class="message-subject">{{ msg.subject }}</span>
+                    <span class="badge" [ngClass]="{
+                      'badge-warning': msg.status === 'PENDIENTE',
+                      'badge-success': msg.status === 'VERIFICADO'
+                    }">
+                      {{ msg.status }}
+                    </span>
+                  </div>
+                  <p class="message-body">{{ msg.content }}</p>
+                  
+                  @if (msg.response) {
+                    <div class="message-response">
+                      <div class="response-title">Respuesta del Administrador:</div>
+                      <div class="response-text">{{ msg.response }}</div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          } @else {
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">
+              No has enviado ningún mensaje de soporte todavía.
+            </p>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- PESTAÑA: MI CUENTA / PERFIL -->
+    @if (activeTab() === 'profile') {
+      <div class="animate-fade-in">
+        <h2 class="section-title">👤 Mi Cuenta</h2>
+        
+        <div class="profile-card glass-panel" style="margin-bottom: 20px;">
+          <div class="profile-item">
+            <span class="profile-label">Nombre Completo</span>
+            <span class="profile-val">{{ auth.currentUser()?.full_name }}</span>
+          </div>
+          
+          <div class="profile-item">
+            <span class="profile-label">Correo Electrónico</span>
+            <span class="profile-val">{{ auth.currentUser()?.email }}</span>
+          </div>
+
+          <div class="profile-item">
+            <span class="profile-label">Código de Estudiante / Registro</span>
+            <span class="profile-val">{{ auth.currentUser()?.student_code || 'No asignado (Requerido para teclado físico)' }}</span>
+          </div>
+          
+          <div class="profile-item">
+            <span class="profile-label">Rol de Usuario</span>
+            <span class="badge badge-success" style="align-self: flex-start; margin-top: 4px;">
+              {{ auth.currentUser()?.role }}
+            </span>
+          </div>
+
+          <div class="profile-item">
+            <span class="profile-label">Casilleros Asignados</span>
+            <span class="profile-val">{{ getMyLockers().length }} Casillero(s) activo(s)</span>
+          </div>
+        </div>
+
+        <!-- Formulario para actualizar perfil -->
+        <div class="glass-panel" style="padding: 20px;">
+          <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 16px;">✏️ Actualizar Datos</h3>
+          
+          @if (profileSuccess()) {
+            <div class="alert alert-success animate-fade-in">{{ profileSuccess() }}</div>
+          }
+          @if (profileError()) {
+            <div class="alert alert-danger animate-fade-in">{{ profileError() }}</div>
+          }
+
+          <form (ngSubmit)="onUpdateProfile()">
+            <div class="form-group">
+              <label class="form-label" for="profileName">Nombre Completo</label>
+              <input 
+                type="text" 
+                id="profileName" 
+                name="profileName" 
+                class="form-control" 
+                [(ngModel)]="profileName" 
+                required>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="profileStudentCode">Código de Estudiante (10 dígitos)</label>
+              <input 
+                type="text" 
+                id="profileStudentCode" 
+                name="profileStudentCode" 
+                class="form-control" 
+                placeholder="Ej. 1234567890" 
+                pattern="[0-9]*"
+                maxlength="10"
+                [(ngModel)]="profileStudentCode" 
+                required>
+            </div>
+            
+            <button type="submit" class="btn-primary" style="width: 100%;">
+              💾 Guardar Cambios
+            </button>
+          </form>
+        </div>
+
+      </div>
+    }
+
+  </main>
+
+  <!-- MODAL: ALQUILAR CASILLERO (Bottom Sheet) -->
+  @if (selectedLocker()) {
+    <div class="modal-overlay" (click)="closeRentModal()">
+      <div class="modal-sheet animate-slide-up" (click)="$event.stopPropagation()" style="max-height: 90vh; overflow-y: auto; padding-bottom: 24px;">
+        <h3 class="modal-title">🔑 Reservar Casillero {{ selectedLocker()?.locker_number }}</h3>
+        
+        @if (bookingError) {
+          <div class="alert alert-danger animate-fade-in">{{ bookingError }}</div>
+        }
+
+        <!-- 1. Duración -->
+        <div class="form-group">
+          <label class="form-label" for="hours">Duración del Alquiler (en horas)</label>
+          <input 
+            type="number" 
+            id="hours" 
+            name="hours" 
+            class="form-control" 
+            min="0.5" 
+            max="72" 
+            step="0.5" 
+            placeholder="Ej: 1.5" 
+            [(ngModel)]="rentHours"
+            style="background: rgba(255, 255, 255, 0.05); color: white; border: 1px solid rgba(255,255,255,0.2);">
+          <small style="display: block; margin-top: 4px; color: var(--text-muted); font-size: 0.8rem;">
+            * Ingresa la duración (ej: 0.5 para 30 min, 1 para 1 hora, 1.5 para 1 hora y media).
+          </small>
+        </div>
+
+        <!-- 2. Código de Descuento -->
+        <div class="form-group" style="margin-top: 12px;">
+          <label class="form-label">¿Tienes un código de descuento?</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" class="form-control" placeholder="Ej. UPSA" [(ngModel)]="discountCode" [disabled]="!auth.isLoggedIn()">
+            <button type="button" class="btn-primary" style="width: auto; padding: 0 16px; margin: 0;" (click)="applyDiscount()">
+              Aplicar
+            </button>
+          </div>
+          @if (promoWarning) {
+            <div style="font-size: 0.8rem; margin-top: 4px;" [ngStyle]="{'color': promoWarning.startsWith('✔️') ? 'var(--accent-cyan)' : 'var(--accent-purple)'}">
+              {{ promoWarning }}
+            </div>
+          }
+          @if (!auth.isLoggedIn()) {
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
+              💡 <span style="color: var(--accent-indigo); cursor: pointer;" (click)="closeRentModal(); router.navigate(['/login'])">Inicia sesión aquí</span> para obtener descuentos.
+            </div>
+          }
+        </div>
+
+        <!-- 3. Total y Código QR de Pago -->
+        <div style="margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px; text-align: center;">
+          <p style="font-size: 1rem; margin-bottom: 8px;">
+            Total a pagar: <strong style="color: var(--accent-cyan); font-size: 1.3rem;">${{ calculatePrice() | number:'1.2-2' }} Bs</strong>
+          </p>
+          
+          @if (calculatePrice() > 0) {
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 12px;">
+              <div class="glass-panel" style="padding: 10px; display: inline-block; background: white; border-radius: 8px;">
+                <img [src]="getPaymentQR()" alt="QR Pago" style="width: 140px; height: 140px; display: block; object-fit: contain;">
+              </div>
+              <a [href]="getPaymentQR()" download="QR_Pago_BoxKeeper.png" class="btn-secondary" style="padding: 6px 12px; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; color: white;">
+                ⬇️ Descargar QR
+              </a>
+            </div>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 12px;">
+              Escanea o descarga este código QR para pagar tu tarifa correspondiente
+            </p>
+          } @else {
+            <p style="font-size: 0.95rem; color: var(--accent-cyan); margin-bottom: 12px; font-weight: 600;">
+              ✨ ¡Reserva gratuita! No se requiere pago.
+            </p>
+          }
+        </div>
+
+        <!-- 4. Subir Comprobante -->
+        @if (calculatePrice() > 0) {
+          <div class="form-group" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px;">
+            <label class="form-label" for="receiptFile">Subir foto del comprobante de pago *</label>
+            <input type="file" id="receiptFile" accept="image/*" class="form-control" (change)="onFileSelected($event)">
+            
+            @if (imagePreviewUrl) {
+              <div class="animate-fade-in" style="margin-top: 8px; text-align: center;">
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Vista previa del comprobante:</p>
+                <img [src]="imagePreviewUrl" alt="Vista Previa" style="max-height: 120px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2);">
+              </div>
+            }
+          </div>
+        }
+
+        <div class="modal-footer-btns" style="margin-top: 16px;">
+          <button class="btn-secondary" (click)="closeRentModal()">Cancelar</button>
+          <button class="btn-primary" [disabled]="calculatePrice() > 0 && !selectedFile" (click)="rentSelectedLocker()">
+            Confirmar Reserva
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL: PAGAR / EXTENDER RESERVA (Bottom Sheet) -->
+  @if (extendingLocker()) {
+    <div class="modal-overlay" (click)="closeExtendModal()">
+      <div class="modal-sheet animate-slide-up" (click)="$event.stopPropagation()" style="max-height: 90vh; overflow-y: auto; padding-bottom: 24px;">
+        <h3 class="modal-title">💳 Extender Reserva Casillero {{ extendingLocker()?.locker_number }}</h3>
+        
+        <div class="modal-desc" style="margin-bottom: 16px;">
+          Tarifa por hora: <strong>${{ extendingLocker()?.price_per_hour }} Bs/h</strong> <br>
+          Vencimiento actual: <strong>{{ extendingLocker()?.occupied_until | date:'dd/MM/yyyy HH:mm' }}</strong>
+        </div>
+
+        @if (extendError) {
+          <div class="alert alert-danger animate-fade-in">{{ extendError }}</div>
+        }
+
+        <!-- 1. Horas adicionales -->
+        <div class="form-group">
+          <label class="form-label" for="extendHours">¿Cuántas horas adicionales deseas añadir?</label>
+          <input 
+            type="number" 
+            id="extendHours" 
+            class="form-control" 
+            min="0.5" 
+            max="48" 
+            step="0.5" 
+            placeholder="Ej: 1.0" 
+            [(ngModel)]="extendHours"
+            style="background: rgba(255, 255, 255, 0.05); color: white; border: 1px solid rgba(255,255,255,0.2);">
+          <small style="display: block; margin-top: 4px; color: var(--text-muted); font-size: 0.8rem;">
+            * Ingresa la duración adicional (ej: 0.5 para 30 min, 1 para 1 hora).
+          </small>
+        </div>
+
+        <!-- 2. QR de Pago para Extensión -->
+        <div style="margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px; text-align: center;">
+          <p style="font-size: 1rem; margin-bottom: 8px;">
+            Total a pagar: <strong style="color: var(--accent-cyan); font-size: 1.3rem;">${{ (extendHours * (extendingLocker()?.price_per_hour || 0.0)) | number:'1.2-2' }} Bs</strong>
+          </p>
+          
+          @if ((extendHours * (extendingLocker()?.price_per_hour || 0.0)) > 0) {
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 12px;">
+              <div class="glass-panel" style="padding: 10px; display: inline-block; background: white; border-radius: 8px;">
+                <img [src]="getExtendPaymentQR()" alt="QR Pago" style="width: 140px; height: 140px; display: block; object-fit: contain;">
+              </div>
+              <a [href]="getExtendPaymentQR()" download="QR_Pago_Extension.png" class="btn-secondary" style="padding: 6px 12px; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; color: white;">
+                ⬇️ Descargar QR
+              </a>
+            </div>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 12px;">
+              Escanea o descarga este código QR para pagar tu extensión
+            </p>
+          }
+        </div>
+
+        <!-- 3. Subir Comprobante de Extensión -->
+        @if ((extendHours * (extendingLocker()?.price_per_hour || 0.0)) > 0) {
+          <div class="form-group" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px;">
+            <label class="form-label" for="extendReceiptFile">Subir foto del comprobante de pago de extensión *</label>
+            <input type="file" id="extendReceiptFile" accept="image/*" class="form-control" (change)="onExtendFileSelected($event)">
+            
+            @if (extendImagePreviewUrl) {
+              <div class="animate-fade-in" style="margin-top: 8px; text-align: center;">
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px;">Vista previa del comprobante:</p>
+                <img [src]="extendImagePreviewUrl" alt="Vista Previa Extensión" style="max-height: 120px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2);">
+              </div>
+            }
+          </div>
+        }
+
+        <div class="modal-footer-btns" style="margin-top: 16px;">
+          <button class="btn-secondary" (click)="closeExtendModal()">Cancelar</button>
+          <button class="btn-primary" [disabled]="!selectedExtendFile" (click)="payAndExtendLocker()">
+            💳 Enviar Comprobante
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Bottom Navigation (Barra de Navegación Móvil) -->
+  <nav class="bottom-nav">
+    <button class="nav-item" [class.active]="activeTab() === 'lockers'" (click)="activeTab.set('lockers')">
+      <span class="nav-icon">🔑</span>
+      <span>Casilleros</span>
+    </button>
+    @if (auth.isLoggedIn()) {
+      <button class="nav-item" [class.active]="activeTab() === 'messages'" (click)="activeTab.set('messages')">
+        <span class="nav-icon">💬</span>
+        <span>Soporte</span>
+      </button>
+      <button class="nav-item" [class.active]="activeTab() === 'profile'" (click)="activeTab.set('profile')">
+        <span class="nav-icon">👤</span>
+        <span>Mi Cuenta</span>
+      </button>
+    }
+  </nav>
+
+</div>
