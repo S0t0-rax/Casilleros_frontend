@@ -27,7 +27,7 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   
-  readonly apiUrl = `http://${window.location.hostname}:8000/api/v1`;
+  readonly apiUrl = `https://casilleros-backend-iodf.onrender.com/api/v1`;
   
   // Señal reactiva para el usuario actual
   currentUser = signal<User | null>(null);
