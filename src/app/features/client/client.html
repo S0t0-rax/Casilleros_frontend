@@ -53,7 +53,8 @@
                       <div class="locker-price">Tarifa: ${{ locker.price_per_hour }}/h</div>
                       
                       <div style="margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;">
-                        <div style="font-size: 0.9rem;">🔑 PIN Físico: <strong style="color: var(--accent-cyan); font-size: 1.1rem; letter-spacing: 1px;">{{ locker.pin_code || '0000' }}</strong></div>
+                        <div style="font-size: 0.9rem;">🔒 PIN Cerrar: <strong style="color: var(--accent-cyan); font-size: 1.1rem; letter-spacing: 1px;">{{ locker.pin_close || '0000' }}</strong></div>
+                        <div style="font-size: 0.9rem; margin-top: 4px;">🔓 PIN Abrir: <strong style="color: var(--accent-cyan); font-size: 1.1rem; letter-spacing: 1px;">{{ locker.pin_open || '0000' }}</strong></div>
                         <div style="font-size: 0.85rem; margin-top: 4px; display: flex; align-items: center; gap: 6px;">
                           <span>Cerrojo:</span>
                           <span class="badge" [ngClass]="{
@@ -69,9 +70,7 @@
 
                   <div class="locker-actions">
                     @if (locker.status !== 'ESPERANDO_VERIFICACION') {
-                      @if (!locker.is_locked) {
-                        <button class="btn-primary btn-card" style="background: var(--color-warning); color: var(--bg-primary); font-weight: bold; border: 1px solid var(--color-warning);" (click)="closeLocker(locker)">🔒 Cerrar Puerta</button>
-                      }
+
                       <button class="btn-primary btn-card" (click)="openExtendModal(locker)">💳 Pagar / Extender</button>
                       <button class="btn-danger btn-card" (click)="releaseLocker(locker)">🔓 Entregar (Liberar)</button>
                     }
@@ -374,6 +373,23 @@
             }
           </div>
         }
+
+        <!-- 5. Correo Electrónico (Opcional si tiene sesión, obligatorio si es anónimo) -->
+        <div class="form-group" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 12px;">
+          <label class="form-label" for="contactEmail">Correo Electrónico (para enviarte los PINs) *</label>
+          <input 
+            type="email" 
+            id="contactEmail" 
+            class="form-control" 
+            placeholder="ejemplo@correo.com" 
+            [(ngModel)]="contactEmail"
+            [required]="!auth.isLoggedIn()">
+          @if (!auth.isLoggedIn()) {
+            <small style="color: var(--accent-cyan); font-size: 0.75rem;">
+              Obligatorio para enviarte tus códigos cuando el pago sea aprobado.
+            </small>
+          }
+        </div>
 
         <div class="modal-footer-btns" style="margin-top: 16px;">
           <button class="btn-secondary" (click)="closeRentModal()">Cancelar</button>

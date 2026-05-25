@@ -37,6 +37,7 @@ export class Client implements OnInit, OnDestroy {
   imagePreviewUrl: string | null = null;
   promoWarning = '';
   bookingError = '';
+  contactEmail = '';
 
   // Control del modal de pago/extensión
   extendingLocker = signal<Locker | null>(null);
@@ -221,14 +222,20 @@ export class Client implements OnInit, OnDestroy {
     }
 
     const appliedCode = (this.auth.isLoggedIn() && this.discountCode) ? this.discountCode : null;
+    const finalEmail = (!this.auth.isLoggedIn() && this.contactEmail) ? this.contactEmail : null;
+
+    if (!this.auth.isLoggedIn() && !this.contactEmail && this.calculatePrice() >= 0) {
+      this.uiService.alert('Por favor ingresa un correo electrónico para recibir tus códigos.');
+      return;
+    }
 
     this.bookingError = '';
-    this.lockerService.rentLockerPublic(locker.id, finalHours, appliedCode, this.selectedFile).subscribe({
+    this.lockerService.rentLockerPublic(locker.id, finalHours, finalEmail, appliedCode, this.selectedFile).subscribe({
       next: (res) => {
         if (res.status === 'ESPERANDO_VERIFICACION') {
           this.uiService.alert(`¡Comprobante enviado exitosamente!\n\nTu solicitud para el casillero ${res.locker_number} ha sido enviada.\nEl administrador verificará tu pago y aprobará el uso en breve.`);
         } else {
-          this.uiService.alert(`¡Casillero ${res.locker_number} alquilado exitosamente!\n\nTu PIN de acceso físico es: ${res.pin_code}\n\nPor favor anota este PIN, lo necesitarás para abrir tu casillero.`);
+          this.uiService.alert(`¡Casillero ${res.locker_number} alquilado exitosamente!\n\nTu PIN para CERRAR es: ${res.pin_close}\nTu PIN para ABRIR es: ${res.pin_open}\n\nPor favor anota estos PINs, los necesitarás para acceder físicamente a tu casillero.`);
         }
         this.closeRentModal();
         this.loadData();

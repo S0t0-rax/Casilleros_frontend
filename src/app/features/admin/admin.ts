@@ -36,11 +36,23 @@ export class Admin implements OnInit {
   selectedMessage = signal<UserMessage | null>(null);
   adminResponseText = '';
 
+  private refreshInterval: any;
+
   ngOnInit() {
     this.auth.fetchProfile().subscribe({
-      next: () => this.loadData(),
+      next: () => {
+        this.loadData();
+        // Auto-refresh lockers y mensajes cada 5 segundos
+        this.refreshInterval = setInterval(() => this.loadData(), 5000);
+      },
       error: () => this.auth.logout()
     });
+  }
+
+  ngOnDestroy() {
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+    }
   }
 
   loadData() {

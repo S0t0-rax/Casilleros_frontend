@@ -12,7 +12,8 @@ export interface Locker {
   assigned_user_id?: number | null;
   occupied_until?: string | null;
   last_payment_at?: string | null;
-  pin_code?: string | null;
+  pin_close?: string | null;
+  pin_open?: string | null;
   is_locked?: boolean;
   payment_receipt_url?: string | null;
   pending_rent_hours?: number | null;
@@ -66,12 +67,18 @@ export class LockerService {
     return this.http.post<Locker>(`${this.auth.apiUrl}/lockers/${lockerId}/unlock-admin`, {});
   }
 
-  rentLockerPublic(lockerId: number, hours: number, discountCode: string | null, receipt: File | null): Observable<Locker> {
+  rentLockerPublic(lockerId: number, hours: number, contactEmail: string | null, discountCode: string | null, receipt: File | null): Observable<Locker> {
     const formData = new FormData();
     formData.append('hours', hours.toString());
+    
+    if (contactEmail) {
+      formData.append('contact_email', contactEmail);
+    }
+    
     if (discountCode) {
       formData.append('discount_code', discountCode);
     }
+    
     if (receipt) {
       formData.append('receipt', receipt, receipt.name);
     }
