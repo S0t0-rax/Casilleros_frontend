@@ -202,6 +202,9 @@
                             📄 <a [href]="auth.apiUrl.split('/api/v1')[0] + locker.payment_receipt_url" target="_blank" style="color: var(--accent-cyan); text-decoration: underline; font-weight: 600;">Ver Comprobante</a>
                           </div>
                         }
+                        <div style="margin-top: 12px;">
+                          <button class="btn-danger" style="width: 100%; padding: 6px;" (click)="releaseLockerAdmin(locker.id)">Liberar Casillero</button>
+                        </div>
                       </div>
                     }
 

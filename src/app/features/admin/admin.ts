@@ -152,6 +152,18 @@ export class Admin implements OnInit {
     });
   }
 
+  releaseLockerAdmin(lockerId: number) {
+    this.uiService.confirm('¿Está seguro de que desea liberar este casillero? Esto finalizará el alquiler actual.', () => {
+      this.lockerService.releaseLocker(lockerId).subscribe({
+        next: () => {
+          this.uiService.alert('Casillero liberado correctamente.');
+          this.loadData();
+        },
+        error: (err) => this.uiService.alert(err.error?.detail || 'Error al liberar el casillero.')
+      });
+    });
+  }
+
   logout() {
     this.auth.logout();
   }
